@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UPI Offline Mesh Dashboard — Real-time mesh network simulator">
+    <title>Dashboard — UPI Offline Mesh</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Header -->
+<header class="top-header">
+    <div class="header-brand">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-name">UPI Offline Mesh</span>
+        <span class="live-badge"><span class="live-dot"></span> Live</span>
+    </div>
+</header>
+
+<!-- Main -->
+<div class="main-content">
+
+    <div class="page-body">
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-emoji">📱</span>
+                <div class="stat-value" id="statDevices">5</div>
+                <div class="stat-label">MESH DEVICES</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-emoji">📦</span>
+                <div class="stat-value" id="statPackets">0</div>
+                <div class="stat-label">PACKETS IN MESH</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-emoji">💳</span>
+                <div class="stat-value" id="statTransactions">0</div>
+                <div class="stat-label">TRANSACTIONS</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-emoji">🛡️</span>
+                <div class="stat-value" id="statCache">0</div>
+                <div class="stat-label">CACHE ENTRIES</div>
+            </div>
+        </div>
+
+        <!-- Demo Flow -->
+        <div class="card mb-6" style="border-top:4px solid transparent;border-image:linear-gradient(135deg,#6366f1,#ec4899) 1;">
+            <div class="card-header">
+                <div class="card-icon purple">🎬</div>
+                <div>
+                    <div class="card-title">Demo Flow — Interactive Simulation</div>
+                    <div class="card-subtitle">Step through the full mesh payment lifecycle</div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+                <!-- Step 1 -->
+                <div style="background:var(--bg-input);border:1.5px solid var(--border);border-radius:14px;padding:22px;display:flex;flex-direction:column;">
+                    <div style="width:30px;height:30px;background:var(--gradient-btn);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;color:#fff;margin-bottom:12px;box-shadow:0 3px 12px rgba(99,102,241,0.3)">1</div>
+                    <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px">📤 Compose Payment</h3>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;flex:1">Simulates a sender phone creating an encrypted UPI packet offline.</p>
+                    <div class="form-group mb-4">
+                        <label class="form-label">Sender</label>
+                        <select id="senderVpa" class="form-control">
+                            <option>alice@demo</option><option>bob@demo</option><option>carol@demo</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="form-label">Receiver</label>
+                        <select id="receiverVpa" class="form-control">
+                            <option>bob@demo</option><option>carol@demo</option><option>alice@demo</option><option>dave@demo</option>
+                        </select>
+                    </div>
+                    <div class="form-row" style="margin-bottom:14px">
+                        <div class="form-group">
+                            <label class="form-label">Amount (₹)</label>
+                            <input type="number" id="amount" value="500" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PIN</label>
+                            <input type="text" id="pin" value="1234" class="form-control" maxlength="4">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendPacket()" id="btnSend" style="width:100%;justify-content:center">📤 Inject into Mesh</button>
+                </div>
+
+                <!-- Step 2 -->
+                <div style="background:var(--bg-input);border:1.5px solid var(--border);border-radius:14px;padding:22px;display:flex;flex-direction:column;">
+                    <div style="width:30px;height:30px;background:var(--gradient-btn2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;color:#fff;margin-bottom:12px">2</div>
+                    <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px">🔄 Gossip Round</h3>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;flex:1">Packets hop device-to-device via Bluetooth Low Energy, spreading across the mesh network.</p>
+                    <button class="btn btn-secondary" onclick="gossip()" id="btnGossip" style="width:100%;justify-content:center;margin-top:auto">🔄 Run Gossip Round</button>
+                </div>
+
+                <!-- Step 3 -->
+                <div style="background:var(--bg-input);border:1.5px solid var(--border);border-radius:14px;padding:22px;display:flex;flex-direction:column;">
+                    <div style="width:30px;height:30px;background:var(--gradient-btn3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;color:#fff;margin-bottom:12px">3</div>
+                    <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px">📡 Bridge Upload</h3>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;flex:1">A bridge node walks outside and hits 4G — uploads all held packets to the backend for settlement.</p>
+                    <button class="btn btn-success" onclick="flushBridges()" id="btnFlush" style="width:100%;justify-content:center;margin-top:auto">📡 Bridges Upload</button>
+                </div>
+            </div>
+
+            <div style="display:flex;justify-content:center;margin-top:18px">
+                <button class="btn btn-danger btn-sm" onclick="resetMesh()" id="btnReset">🗑 Reset Mesh + Cache</button>
+            </div>
+        </div>
+
+        <!-- Devices + Accounts -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon purple">📱</div>
+                    <div><div class="card-title">Mesh Devices</div><div class="card-subtitle">Simulated phones in the network</div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="devices"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon green">🏦</div>
+                    <div><div class="card-title">Account Balances</div><div class="card-subtitle">Simulated bank ledger</div></div>
+                </div>
+                <div class="table-wrap">
+                    <table id="accounts-table">
+                        <thead><tr><th>VPA</th><th>Holder</th><th>Balance</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Ledger -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <div class="card-icon cyan">📜</div>
+                <div><div class="card-title">Transaction Ledger</div><div class="card-subtitle">Settled and processed payments</div></div>
+            </div>
+            <div class="table-wrap">
+                <table id="tx-table">
+                    <thead><tr><th>ID</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Bridge</th><th>Hops</th><th>Settled</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="txEmpty" style="text-align:center;padding:40px;color:var(--text-muted);font-size:0.9rem;display:none">
+                ✨ No transactions yet — run the demo flow above!
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon yellow">🪵</div>
+                <div><div class="card-title">Activity Log</div><div class="card-subtitle">Real-time event stream</div></div>
+            </div>
+            <div id="log" style="background:var(--bg-input);border:1.5px solid var(--border);border-radius:14px;padding:16px;max-height:240px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:0.8rem;line-height:1.9"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function showToast(message, type='info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icons = {success:'✅',info:'💡',error:'❌'};
+    t.innerHTML = `<span>${icons[type]||'💡'}</span><span class="toast-text">${message}</span>`;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity='0';t.style.transform='translateX(120px)';t.style.transition='all 0.4s ease'; setTimeout(()=>t.remove(),400); }, 3500);
+}
+
+function log(msg) {
+    const el = document.getElementById('log');
+    const e = document.createElement('div');
+    e.style.cssText = 'padding:4px 0;border-bottom:1px solid rgba(99,102,241,0.05);animation:slideInLeft 0.3s ease';
+    e.innerHTML = `<span style="color:var(--text-muted);margin-right:10px;font-weight:600">${new Date().toLocaleTimeString()}</span><span style="color:var(--accent)">${msg}</span>`;
+    el.prepend(e);
+    while (el.children.length > 50) el.removeChild(el.lastChild);
+}
+
+function animateValue(el, newVal) {
+    if (parseInt(el.textContent) === newVal) return;
+    el.style.animation='none'; el.offsetHeight; el.style.animation='countUp 0.4s ease';
+    el.textContent = newVal;
+}
+
+async function refresh() {
+    try {
+        const m = await fetch('/api/mesh/state').then(r=>r.json());
+        let totalPkts = 0;
+        document.getElementById('devices').innerHTML = m.devices.map((d,i) => {
+            totalPkts += d.packetCount;
+            const isB = d.hasInternet;
+            return `<div style="background:var(--bg-input);border:1.5px solid ${isB?'rgba(16,185,129,0.3)':'var(--border)'};border-radius:12px;padding:14px;transition:var(--transition)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <span style="font-weight:700;font-size:0.88rem">${isB?'📡':'📱'} ${d.deviceId.replace('phone-','')}</span>
+                    <span style="font-size:0.65rem;font-weight:800;padding:2px 9px;border-radius:20px;background:${isB?'rgba(16,185,129,0.1)':'rgba(148,163,184,0.1)'};color:${isB?'var(--success)':'var(--text-muted)'}">${isB?'4G':'OFFLINE'}</span>
+                </div>
+                <div style="font-size:0.76rem;color:var(--text-muted)">${d.packetCount} packet${d.packetCount!==1?'s':''}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${d.packetIds.map(id=>`<span style="font-family:monospace;font-size:0.68rem;background:rgba(99,102,241,0.08);color:var(--accent);padding:2px 7px;border-radius:6px">${id}</span>`).join('')}</div>
+            </div>`;
+        }).join('');
+
+        animateValue(document.getElementById('statDevices'), m.devices.length);
+        animateValue(document.getElementById('statPackets'), totalPkts);
+        animateValue(document.getElementById('statCache'), m.idempotencyCacheSize);
+
+        const accs = await fetch('/api/accounts').then(r=>r.json());
+        document.querySelector('#accounts-table tbody').innerHTML = accs.map(a=>`
+            <tr><td><span class="mono">${a.vpa}</span></td>
+            <td style="font-weight:600">${a.holderName}</td>
+            <td class="balance">₹${parseFloat(a.balance).toFixed(2)}</td></tr>`).join('');
+
+        const txs = await fetch('/api/transactions').then(r=>r.json());
+        animateValue(document.getElementById('statTransactions'), txs.length);
+        const emptyEl = document.getElementById('txEmpty');
+        const tbody = document.querySelector('#tx-table tbody');
+        if (txs.length===0) { tbody.innerHTML=''; emptyEl.style.display='block'; document.querySelector('#tx-table thead').style.display='none'; }
+        else {
+            emptyEl.style.display='none'; document.querySelector('#tx-table thead').style.display='';
+            tbody.innerHTML = txs.map(t=>`<tr>
+                <td class="mono">#${t.id}</td>
+                <td style="font-weight:600">${t.senderVpa}</td>
+                <td style="font-weight:600">${t.receiverVpa}</td>
+                <td class="balance">₹${parseFloat(t.amount).toFixed(2)}</td>
+                <td><span class="status-badge status-${t.status}">${t.status==='SETTLED'?'✓':'✗'} ${t.status}</span></td>
+                <td class="mono">${t.bridgeNodeId.replace('phone-','')}</td>
+                <td>${t.hopCount}</td>
+                <td class="mono" style="font-size:0.76rem">${new Date(t.settledAt).toLocaleTimeString()}</td>
+            </tr>`).join('');
+        }
+    } catch(e) { console.error('Refresh error:', e); }
+}
+
+async function sendPacket() {
+    const btn = document.getElementById('btnSend');
+    btn.disabled=true; btn.innerHTML='⏳ Encrypting...';
+    try {
+        const r = await fetch('/api/demo/send',{method:'POST',headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({senderVpa:document.getElementById('senderVpa').value,receiverVpa:document.getElementById('receiverVpa').value,amount:parseFloat(document.getElementById('amount').value),pin:document.getElementById('pin').value,ttl:5,startDevice:'phone-alice'})
+        }).then(r=>r.json());
+        log(`📤 Packet <strong>${r.packetId.substring(0,8)}</strong> injected at <strong>${r.injectedAt}</strong>`);
+        showToast('Payment packet injected into mesh','success');
+        refresh();
+    } catch(e) { showToast('Failed to send packet','error'); }
+    finally { btn.disabled=false; btn.innerHTML='📤 Inject into Mesh'; }
+}
+
+async function gossip() {
+    const btn = document.getElementById('btnGossip');
+    btn.disabled=true; btn.innerHTML='⏳ Gossiping...';
+    try {
+        const r = await fetch('/api/mesh/gossip',{method:'POST'}).then(r=>r.json());
+        log(`🔄 Gossip: <strong>${r.transfers}</strong> transfer(s)`);
+        showToast(r.transfers>0?`${r.transfers} packet(s) propagated`:'No packets to propagate','info');
+        refresh();
+    } catch(e){ showToast('Gossip failed','error'); }
+    finally { btn.disabled=false; btn.innerHTML='🔄 Run Gossip Round'; }
+}
+
+async function flushBridges() {
+    const btn = document.getElementById('btnFlush');
+    btn.disabled=true; btn.innerHTML='⏳ Uploading...';
+    try {
+        const r = await fetch('/api/mesh/flush',{method:'POST'}).then(r=>r.json());
+        log(`📡 <strong>${r.uploadsAttempted}</strong> bridge upload(s)`);
+        r.results.forEach(res => {
+            const icon = res.outcome==='SETTLED'?'✅':res.outcome==='DUPLICATE_DROPPED'?'⚠️':'❌';
+            log(`&nbsp;&nbsp;${icon} ${res.bridgeNode} → ${res.packetId} → <strong>${res.outcome}</strong>${res.reason?` (${res.reason})`:''}`);
+        });
+        showToast(r.uploadsAttempted>0?`${r.uploadsAttempted} packet(s) uploaded`:'No packets at bridges',r.uploadsAttempted>0?'success':'info');
+        refresh();
+    } catch(e){ showToast('Bridge flush failed','error'); }
+    finally { btn.disabled=false; btn.innerHTML='📡 Bridges Upload'; }
+}
+
+async function resetMesh() {
+    try {
+        await fetch('/api/mesh/reset',{method:'POST'});
+        log('🗑 Mesh + idempotency cache <strong>cleared</strong>');
+        showToast('Mesh and cache reset','info');
+        refresh();
+    } catch(e){ showToast('Reset failed','error'); }
+}
+
+refresh();
+setInterval(refresh, 4000);
+log('🚀 Dashboard connected to backend');
+</script>
+</body>
+</html>
