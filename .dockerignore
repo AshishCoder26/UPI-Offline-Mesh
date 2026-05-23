@@ -1,0 +1,11 @@
+target/
+.git/
+.github/
+.mvn/
+*.md
+*.iml
+.idea/
+.vscode/
+k8s/
+monitoring/
+docker-compose.yml
