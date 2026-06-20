@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: 'UPI Mesh Dashboards'
+    orgId: 1
+    folder: 'UPI Mesh'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

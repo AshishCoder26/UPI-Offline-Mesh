@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: upi-mesh-svc
+  namespace: upi-mesh
+  labels:
+    app: upi-mesh
+  annotations:
+    # Tells Prometheus operator to scrape this service (alternative to pod annotations)
+    prometheus.io/scrape: "true"
+    prometheus.io/path:   "/actuator/prometheus"
+    prometheus.io/port:   "8080"
+spec:
+  type: ClusterIP
+  selector:
+    app: upi-mesh
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080

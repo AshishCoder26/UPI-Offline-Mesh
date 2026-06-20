@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: upi-mesh
+  labels:
+    app: grafana
+data:
+  # Tells Grafana where to find dashboard JSON files
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'UPI Mesh Dashboards'
+        orgId: 1
+        folder: 'UPI Mesh'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-json
+  namespace: upi-mesh
+  labels:
+    app: grafana
+data:
+  upi-mesh-dashboard.json: |
+    {
+      "title": "UPI Offline Mesh — Application Metrics",
+      "uid": "upi-mesh-app",
+      "schemaVersion": 38,
+      "refresh": "10s",
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "HTTP Requests / second",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [{
+            "expr": "rate(http_server_requests_seconds_count{application=\"upi-offline-mesh\"}[1m])",
+            "legendFormat": "{{method}} {{uri}} {{status}}"
+          }]
+        },
+        {
+          "id": 2,
+          "title": "HTTP Request Latency (p99)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [{
+            "expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{application=\"upi-offline-mesh\"}[1m]))",
+            "legendFormat": "p99 {{uri}}"
+          }]
+        },
+        {
+          "id": 3,
+          "title": "JVM Heap Used (MB)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [{
+            "expr": "jvm_memory_used_bytes{application=\"upi-offline-mesh\", area=\"heap\"} / 1024 / 1024",
+            "legendFormat": "{{id}}"
+          }]
+        },
+        {
+          "id": 4,
+          "title": "JVM GC Pause Duration",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [{
+            "expr": "rate(jvm_gc_pause_seconds_sum{application=\"upi-offline-mesh\"}[1m])",
+            "legendFormat": "{{action}} {{cause}}"
+          }]
+        },
+        {
+          "id": 5,
+          "title": "Active Threads",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+          "targets": [{
+            "expr": "jvm_threads_live_threads{application=\"upi-offline-mesh\"}",
+            "legendFormat": "Live Threads"
+          }]
+        },
+        {
+          "id": 6,
+          "title": "CPU Usage",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+          "targets": [{
+            "expr": "process_cpu_usage{application=\"upi-offline-mesh\"}",
+            "legendFormat": "CPU"
+          }],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": 0 },
+                  { "color": "yellow", "value": 0.5 },
+                  { "color": "red", "value": 0.8 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "HTTP Error Rate (5xx)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+          "targets": [{
+            "expr": "rate(http_server_requests_seconds_count{application=\"upi-offline-mesh\",status=~\"5..\"}[1m])",
+            "legendFormat": "5xx errors/s"
+          }]
+        },
+        {
+          "id": 8,
+          "title": "Uptime",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
+          "targets": [{
+            "expr": "process_uptime_seconds{application=\"upi-offline-mesh\"}",
+            "legendFormat": "Uptime"
+          }],
+          "fieldConfig": { "defaults": { "unit": "s" } }
+        }
+      ]
+    }

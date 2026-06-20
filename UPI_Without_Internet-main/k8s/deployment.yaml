@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upi-mesh
+  namespace: upi-mesh
+  labels:
+    app: upi-mesh
+    version: "latest"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: upi-mesh
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0          # zero-downtime rolling update
+  template:
+    metadata:
+      labels:
+        app: upi-mesh
+        version: "latest"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path:   "/actuator/prometheus"
+        prometheus.io/port:   "8080"
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: upi-mesh
+          image: YOUR_DOCKERHUB_USERNAME/upi-offline-mesh:latest   # replaced by CI/CD
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+
+          # ── Inject ConfigMap as environment variables ──────────────────────
+          envFrom:
+            - configMapRef:
+                name: upi-mesh-config
+
+          # ── Resource requests / limits ─────────────────────────────────────
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          # ── Liveness probe — restarts the pod if the app hangs ─────────────
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+
+          # ── Readiness probe — removes pod from load-balancer if not ready ──
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # ── Startup probe — gives the JVM extra time to start ──────────────
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            failureThreshold: 12
+            periodSeconds: 10
+
+      # Security hardening
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000

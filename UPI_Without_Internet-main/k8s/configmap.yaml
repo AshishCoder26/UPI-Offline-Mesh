@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upi-mesh-config
+  namespace: upi-mesh
+  labels:
+    app: upi-mesh
+data:
+  # These values are injected as environment variables into the container.
+  # The Spring Boot app reads them automatically via Spring's relaxed binding.
+  SERVER_PORT: "8080"
+  SPRING_DATASOURCE_URL: "jdbc:h2:mem:upimesh"
+  SPRING_DATASOURCE_USERNAME: "sa"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
+  SPRING_H2_CONSOLE_ENABLED: "true"
+  UPI_MESH_IDEMPOTENCY_TTL_SECONDS: "86400"
+  UPI_MESH_PACKET_MAX_AGE_SECONDS: "86400"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus,metrics"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+  MANAGEMENT_METRICS_TAGS_APPLICATION: "upi-offline-mesh"

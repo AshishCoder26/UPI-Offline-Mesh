@@ -60,6 +60,19 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <!-- Actuator — /actuator/health for K8s probes, /actuator/prometheus for metrics -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Micrometer Prometheus registry — exposes metrics in Prometheus format -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Test scope -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
