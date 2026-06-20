@@ -1,8 +1,18 @@
+# IDEs and editors
 .vscode/
+.idea/
+*.iml
+
+# Build and build artifacts
+target/
 **/target/
-**/.mvn/wrapper/maven-wrapper.jar
+*.class
 **/*.class
+*.log
 **/*.log
-**/.idea/
-**/*.iml
+.mvn/wrapper/maven-wrapper.jar
+**/.mvn/wrapper/maven-wrapper.jar
+
+# OS files
+.DS_Store
 **/.DS_Store
